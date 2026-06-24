@@ -138,6 +138,12 @@ ipcMain.handle("open-settings", () => createSettingsWindow());
 ipcMain.handle("open-external", (_e, url) => {
   if (/^https?:\/\//.test(url || "")) shell.openExternal(url);
 });
+
+// 요청한 창의 투명도 조절(강의 화면이 비쳐 보이게)
+ipcMain.handle("set-opacity", (e, v) => {
+  const w = BrowserWindow.fromWebContents(e.sender);
+  if (w) w.setOpacity(Math.max(0.2, Math.min(1, Number(v) || 1)));
+});
 ipcMain.handle("get-settings", () => ({
   ...settings.publicView(),
   cliAvailable: ai.cliAvailable(),

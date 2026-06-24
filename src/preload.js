@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld("api", {
   setSettings: (payload) => ipcRenderer.invoke("set-settings", payload),
   openSettings: () => ipcRenderer.invoke("open-settings"),
   openExternal: (url) => ipcRenderer.invoke("open-external", url),
+  // 이 창의 투명도 조절 (0~1)
+  setOpacity: (v) => ipcRenderer.invoke("set-opacity", v),
   onSettingsChanged: (cb) =>
     ipcRenderer.on("settings-changed", (_e, view) => cb(view)),
   // payload: { text }

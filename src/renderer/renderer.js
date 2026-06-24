@@ -20,6 +20,8 @@ const refreshBtn = document.getElementById("refreshDevices");
 const langSelect = document.getElementById("langSelect");
 const visionBtn = document.getElementById("visionBtn");
 const chatBtn = document.getElementById("chatBtn");
+const opacity = document.getElementById("opacity");
+const opacityVal = document.getElementById("opacityVal");
 
 // 현재 AI 제공자 상태(설정에서 옴): "free" | "anthropic" | "openai" | "cli"
 const state = { provider: "free" };
@@ -302,6 +304,11 @@ refreshBtn.onclick = refreshDevices;
 visionBtn.onclick = toggleVision;
 chatBtn.onclick = () => window.api.openChat(); // 질문은 별도 창에서
 settingsBtn.onclick = () => window.api.openSettings();
+opacity.addEventListener("input", () => {
+  const pct = Number(opacity.value);
+  opacityVal.textContent = pct + "%";
+  window.api.setOpacity(pct / 100);
+});
 navigator.mediaDevices.addEventListener("devicechange", refreshDevices);
 
 setStatus("대기 중");
