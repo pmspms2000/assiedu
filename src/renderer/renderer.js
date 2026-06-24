@@ -307,7 +307,8 @@ settingsBtn.onclick = () => window.api.openSettings();
 opacity.addEventListener("input", () => {
   const pct = Number(opacity.value);
   opacityVal.textContent = pct + "%";
-  window.api.setOpacity(pct / 100);
+  // 배경판만 투명하게 (글자는 또렷하게 유지)
+  document.documentElement.style.setProperty("--bg-alpha", String(pct / 100));
 });
 navigator.mediaDevices.addEventListener("devicechange", refreshDevices);
 

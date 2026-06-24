@@ -1,10 +1,14 @@
 * {
   box-sizing: border-box;
 }
+/* --bg-alpha: 배경판 불투명도(슬라이더로 조절). 글자는 항상 또렷하게 유지 */
+:root {
+  --bg-alpha: 1;
+}
 body {
   margin: 0;
   font-family: -apple-system, "Apple SD Gothic Neo", sans-serif;
-  background: #1c1c1e;
+  background: rgba(28, 28, 30, var(--bg-alpha));
   color: #f2f2f7;
   display: flex;
   flex-direction: column;
@@ -16,7 +20,7 @@ header {
   flex-wrap: wrap;
   gap: 8px;
   padding: 10px 12px;
-  background: #2c2c2e;
+  background: rgba(44, 44, 46, var(--bg-alpha));
   border-bottom: 1px solid #3a3a3c;
 }
 button {
@@ -58,7 +62,7 @@ button.active {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: #2c2c2e;
+  background: rgba(44, 44, 46, var(--bg-alpha));
   border-bottom: 1px solid #3a3a3c;
 }
 .device-label {
@@ -92,7 +96,7 @@ button.active {
 .segment {
   margin-bottom: 14px;
   padding: 10px;
-  background: #2c2c2e;
+  background: rgba(44, 44, 46, var(--bg-alpha));
   border-radius: 10px;
 }
 .segment .en {
@@ -129,12 +133,12 @@ button.active {
   color: #ffd60a;
   min-height: 20px;
   border-top: 1px solid #3a3a3c;
-  background: #2c2c2e;
+  background: rgba(44, 44, 46, var(--bg-alpha));
 }
 #summaryPanel {
   position: absolute;
   inset: 0;
-  background: #1c1c1e;
+  background: rgba(28, 28, 30, var(--bg-alpha));
   padding: 12px;
   overflow-y: auto;
 }
@@ -215,7 +219,7 @@ body.chatwin #chatLog {
   justify-content: flex-start; /* 왼쪽 정렬 */
   gap: 6px;
   padding: 5px 10px;
-  background: #2c2c2e;
+  background: rgba(44, 44, 46, var(--bg-alpha));
   border-top: 1px solid #3a3a3c;
 }
 .op-label {

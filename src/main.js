@@ -29,6 +29,8 @@ function createWindow() {
     height: 720,
     title: "AssiEdu",
     alwaysOnTop: true, // 수업 화면 위에 떠 있게
+    transparent: true, // 배경만 투명하게 해 뒤 강의가 비치게 (글자는 CSS로 또렷 유지)
+    backgroundColor: "#00000000",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
