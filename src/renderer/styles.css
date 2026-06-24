@@ -212,25 +212,26 @@ body.chatwin #chatLog {
 #opacitybar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
+  justify-content: flex-start; /* 왼쪽 정렬 */
+  gap: 6px;
+  padding: 5px 10px;
   background: #2c2c2e;
   border-top: 1px solid #3a3a3c;
 }
 .op-label {
-  font-size: 12px;
+  font-size: 11px;
   color: #98989d;
   white-space: nowrap;
 }
 #opacity {
-  flex: 1;
+  width: 96px; /* 작게 — 창 절반을 넘지 않게 */
   accent-color: #0a84ff;
 }
 #opacityVal {
-  font-size: 12px;
+  font-size: 11px;
   color: #98989d;
-  width: 38px;
-  text-align: right;
+  width: 32px;
+  text-align: left;
 }
 
 /* 설정 창 */
