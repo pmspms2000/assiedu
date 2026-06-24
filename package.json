@@ -1,0 +1,58 @@
+{
+  "name": "assiedu",
+  "version": "0.1.0",
+  "description": "교환학생 영어 수업용 실시간 번역·설명 데스크톱 AI",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win"
+  },
+  "author": "",
+  "license": "MIT",
+  "build": {
+    "appId": "com.assiedu.app",
+    "productName": "AssiEdu",
+    "asar": true,
+    "npmRebuild": false,
+    "electronDist": "node_modules/electron/dist",
+    "directories": {
+      "output": "dist-app"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": [
+        "dmg",
+        "dir"
+      ],
+      "category": "public.app-category.education",
+      "identity": null,
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "강의 음성을 인식해 번역하기 위해 마이크/시스템 오디오에 접근합니다."
+      }
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.40.0",
+    "dotenv": "^16.4.5"
+  }
+}

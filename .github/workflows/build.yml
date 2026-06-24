@@ -1,0 +1,43 @@
+name: Build apps (mac + windows)
+
+# 수동 실행(Actions 탭의 "Run workflow") 또는 v태그 푸시 시 빌드
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - name: Build macOS (.dmg)
+        run: npm run dist:mac
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false" # 코드서명 없이(개인용)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AssiEdu-mac
+          path: |
+            dist-app/*.dmg
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - name: Build Windows (.exe 설치파일)
+        run: npm run dist:win
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AssiEdu-windows
+          path: |
+            dist-app/*.exe

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AssiEdu</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <button id="toggleBtn" class="primary">▶ 시작</button>
+      <button id="visionBtn" title="강의 화면(슬라이드/판서)을 AI가 보게 합니다">🖥️ 화면 보기</button>
+      <button id="chatBtn" title="강의 내용·화면·판서에 대해 질문하기">💬 질문</button>
+      <button id="summaryBtn">📝 요약</button>
+      <button id="settingsBtn" title="AI 제공자·API 키 설정">⚙️</button>
+      <span id="modeBadge" class="badge"></span>
+      <span id="status" class="status">대기 중</span>
+    </header>
+
+    <div class="devicebar">
+      <span class="device-label">🎤 입력</span>
+      <select id="deviceSelect" title="소리를 들어올 입력 장치를 고르세요">
+        <option value="">기본 입력 장치</option>
+      </select>
+      <button id="refreshDevices" title="장치 목록 새로고침">🔄</button>
+    </div>
+
+    <div class="devicebar">
+      <span class="device-label">🗣️ 강의</span>
+      <select id="langSelect" title="강의 언어를 고르세요 (시작 시 적용)">
+        <option value="en">🇺🇸 영어 강의 → 한국어 번역</option>
+        <option value="ko">🇰🇷 한국어 강의 → 받아쓰기</option>
+      </select>
+    </div>
+
+    <div id="content">
+      <main id="captions"></main>
+
+      <div id="summaryPanel" class="hidden">
+        <div class="summary-head">
+          <strong>수업 요약</strong>
+          <button id="closeSummary">✕</button>
+        </div>
+        <div id="summaryBody"></div>
+      </div>
+    </div>
+
+    <div id="interim" class="interim"></div>
+
+    <script src="config.js"></script>
+    <script type="module" src="renderer.js"></script>
+  </body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AssiEdu — 질문</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="chatwin">
+    <header>
+      <strong class="chat-title">💬 강의 질문</strong>
+      <span id="status" class="status">자막·화면을 참고해 답해요</span>
+    </header>
+
+    <div id="chatLog"></div>
+
+    <div class="chat-input-row">
+      <input
+        id="chatInput"
+        type="text"
+        placeholder="강의 내용·화면·판서에 대해 물어보세요"
+      />
+      <button id="chatSend" class="primary">전송</button>
+    </div>
+
+    <script src="config.js"></script>
+    <script type="module" src="chat.js"></script>
+  </body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AssiEdu — 설정</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="settingswin">
+    <header>
+      <strong class="chat-title">⚙️ AI 제공자 설정</strong>
+    </header>
+
+    <div id="settingsBody">
+      <p class="hint">
+        음성 인식(자막)은 항상 무료입니다. 아래에서 <b>번역·설명·요약·질문</b>에
+        쓸 AI를 고르세요. API 키는 이 기기에 암호화 저장되며 외부로 전송되지
+        않습니다.
+      </p>
+
+      <label class="opt">
+        <input type="radio" name="provider" value="free" />
+        <span><b>무료</b> — 계정 없이 (번역: MyMemory, 설명·요약·질문 꺼짐)</span>
+      </label>
+
+      <label class="opt">
+        <input type="radio" name="provider" value="anthropic" />
+        <span><b>Claude (Anthropic API 키)</b> — 화면/판서 읽기 지원</span>
+      </label>
+      <div class="keyrow" data-for="anthropic">
+        <input id="anthropicKey" type="password" placeholder="sk-ant-..." />
+        <button class="link" data-url="https://console.anthropic.com/settings/keys">키 발급</button>
+      </div>
+
+      <label class="opt">
+        <input type="radio" name="provider" value="openai" />
+        <span><b>GPT (OpenAI API 키)</b> — 화면/판서 읽기 지원</span>
+      </label>
+      <div class="keyrow" data-for="openai">
+        <input id="openaiKey" type="password" placeholder="sk-..." />
+        <button class="link" data-url="https://platform.openai.com/api-keys">키 발급</button>
+      </div>
+
+      <label class="opt" id="cliOpt" style="display: none">
+        <input type="radio" name="provider" value="cli" />
+        <span
+          ><b>내 컴퓨터의 Claude (고급)</b> — 이미 로그인된 Claude Code 사용 (키
+          불필요)</span
+        >
+      </label>
+
+      <label class="opt" id="codexOpt" style="display: none">
+        <input type="radio" name="provider" value="codex" />
+        <span
+          ><b>내 컴퓨터의 Codex (고급)</b> — 이미 로그인된 Codex CLI(ChatGPT 계정)
+          사용 (키 불필요). 번역·설명·질문·요약 텍스트 전용 — 화면/판서는 못
+          봅니다.</span
+        >
+      </label>
+
+      <p id="encWarn" class="warn hidden">
+        ⚠️ 이 기기에서 키 암호화 저장이 불가합니다. 키가 저장되지 않을 수 있어요.
+      </p>
+
+      <div class="actions">
+        <span id="saveStatus" class="status"></span>
+        <button id="saveBtn" class="primary">저장</button>
+      </div>
+    </div>
+
+    <script src="settings.js" type="module"></script>
+  </body>
+</html>
