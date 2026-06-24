@@ -22,7 +22,6 @@ const visionBtn = document.getElementById("visionBtn");
 const chatBtn = document.getElementById("chatBtn");
 const opacity = document.getElementById("opacity");
 const opacityVal = document.getElementById("opacityVal");
-const closeWin = document.getElementById("closeWin");
 
 // 현재 AI 제공자 상태(설정에서 옴): "free" | "anthropic" | "openai" | "cli"
 const state = { provider: "free" };
@@ -305,12 +304,10 @@ refreshBtn.onclick = refreshDevices;
 visionBtn.onclick = toggleVision;
 chatBtn.onclick = () => window.api.openChat(); // 질문은 별도 창에서
 settingsBtn.onclick = () => window.api.openSettings();
-closeWin.onclick = () => window.api.closeWindow();
 opacity.addEventListener("input", () => {
   const pct = Number(opacity.value);
   opacityVal.textContent = pct + "%";
-  // 배경판만 투명하게 (글자는 또렷하게 유지)
-  document.documentElement.style.setProperty("--bg-alpha", String(pct / 100));
+  window.api.setOpacity(pct / 100);
 });
 navigator.mediaDevices.addEventListener("devicechange", refreshDevices);
 

@@ -29,9 +29,6 @@ function createWindow() {
     height: 720,
     title: "AssiEdu",
     alwaysOnTop: true, // 수업 화면 위에 떠 있게
-    transparent: true, // 배경만 투명하게 해 뒤 강의가 비치게 (글자는 CSS로 또렷 유지)
-    backgroundColor: "#00000000",
-    frame: false, // 네이티브 프레임 제거(투명화와 공존하려면 필요). 자체 헤더 바 사용
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -146,12 +143,6 @@ ipcMain.handle("open-external", (_e, url) => {
 ipcMain.handle("set-opacity", (e, v) => {
   const w = BrowserWindow.fromWebContents(e.sender);
   if (w) w.setOpacity(Math.max(0.2, Math.min(1, Number(v) || 1)));
-});
-
-// 자체 닫기 버튼 (프레임 없는 창용)
-ipcMain.handle("close-window", (e) => {
-  const w = BrowserWindow.fromWebContents(e.sender);
-  if (w) w.close();
 });
 ipcMain.handle("get-settings", () => ({
   ...settings.publicView(),

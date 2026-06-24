@@ -9,8 +9,6 @@ contextBridge.exposeInMainWorld("api", {
   openExternal: (url) => ipcRenderer.invoke("open-external", url),
   // 이 창의 투명도 조절 (0~1)
   setOpacity: (v) => ipcRenderer.invoke("set-opacity", v),
-  // 이 창 닫기 (프레임이 없어 자체 닫기 버튼용)
-  closeWindow: () => ipcRenderer.invoke("close-window"),
   onSettingsChanged: (cb) =>
     ipcRenderer.on("settings-changed", (_e, view) => cb(view)),
   // payload: { text }
