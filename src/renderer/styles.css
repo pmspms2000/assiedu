@@ -19,9 +19,15 @@ header {
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 10px 12px;
+  padding: 10px 12px 10px 76px; /* 왼쪽: 신호등 버튼 자리 확보 */
   background: rgba(44, 44, 46, var(--bg-alpha));
   border-bottom: 1px solid #3a3a3c;
+  -webkit-app-region: drag; /* 타이틀바가 없으니 헤더로 창 이동 */
+}
+header button,
+header select,
+header input {
+  -webkit-app-region: no-drag; /* 버튼은 클릭 가능하게 */
 }
 button {
   background: #3a3a3c;
