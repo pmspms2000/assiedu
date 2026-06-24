@@ -1,5 +1,9 @@
 # AssiEdu 🎓
 
+[![Downloads](https://img.shields.io/github/downloads/pmspms2000/assiedu/total?color=brightgreen&label=downloads)](https://github.com/pmspms2000/assiedu/releases)
+[![Latest release](https://img.shields.io/github/v/release/pmspms2000/assiedu?label=release)](https://github.com/pmspms2000/assiedu/releases/latest)
+[![Platforms](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)](https://github.com/pmspms2000/assiedu/releases/latest)
+
 **영어 강의가 버거운 학생을 위한 실시간 강의 도우미.**
 교수님이 영어로 말해도, 화면에 **원문 + 한국어 번역 자막**이 같이 뜨고,
 모르는 용어는 **설명**해주고, 궁금한 건 **질문**하고, 수업이 끝나면 **요약 노트**까지 만들어줍니다.
