@@ -9,6 +9,15 @@
 
 데스크톱 앱(맥·윈도우)으로, 강의 화면 위에 **항상 떠 있는 자막 창**으로 동작합니다.
 
+## ⬇️ 다운로드 (클릭 한 번)
+
+**[👉 최신 버전 받기 (Releases)](https://github.com/pmspms2000/assiedu/releases/latest)**
+
+- 🍎 맥 (Apple Silicon): [`AssiEdu-0.1.0-arm64.dmg`](https://github.com/pmspms2000/assiedu/releases/download/v0.1.0/AssiEdu-0.1.0-arm64.dmg)
+- 🪟 윈도우: [`AssiEdu-Setup-0.1.0.exe`](https://github.com/pmspms2000/assiedu/releases/download/v0.1.0/AssiEdu-Setup-0.1.0.exe)
+
+설치 방법은 아래 [설치](#설치) 참고. (서명되지 않은 앱이라 첫 실행 시 보안 경고는 한 번 우회해야 해요.)
+
 ---
 
 ## 이 앱이 해결하는 문제
