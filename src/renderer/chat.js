@@ -41,7 +41,8 @@ async function send() {
 
 chatSend.onclick = send;
 chatInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") send();
+  // 한글 등 IME 조합 중의 Enter는 '글자 확정'이라 무시(중복 전송 방지)
+  if (e.key === "Enter" && !e.isComposing && e.keyCode !== 229) send();
 });
 
 // 창을 다시 열면 메인 프로세스에 보관된 이전 대화를 복원
