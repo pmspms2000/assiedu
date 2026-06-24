@@ -19,10 +19,10 @@ header {
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 10px 12px 10px 76px; /* 왼쪽: 신호등 버튼 자리 확보 */
+  padding: 10px 12px;
   background: rgba(44, 44, 46, var(--bg-alpha));
   border-bottom: 1px solid #3a3a3c;
-  -webkit-app-region: drag; /* 타이틀바가 없으니 헤더로 창 이동 */
+  -webkit-app-region: drag; /* 프레임이 없으니 헤더로 창 이동 */
 }
 header button,
 header select,
@@ -50,6 +50,15 @@ button.primary.running {
 button.active {
   background: #30d158;
   color: #0b2a14;
+}
+#closeWin {
+  background: none;
+  color: #98989d;
+  padding: 4px 8px;
+}
+#closeWin:hover {
+  background: #ff453a;
+  color: #fff;
 }
 .badge {
   font-size: 11px;
