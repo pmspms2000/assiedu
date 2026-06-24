@@ -52,7 +52,6 @@
     "electron-builder": "^25.1.8"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.40.0",
-    "dotenv": "^16.4.5"
+    "@anthropic-ai/sdk": "^0.40.0"
   }
 }

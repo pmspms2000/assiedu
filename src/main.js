@@ -1,5 +1,4 @@
 // Electron 메인 프로세스: 창 생성, 설정/키 관리, AI 제공자 라우팅
-require("dotenv").config();
 const path = require("path");
 const fs = require("fs");
 const {

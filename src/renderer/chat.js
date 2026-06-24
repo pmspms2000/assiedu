@@ -1,8 +1,5 @@
 // 별도 질문 창: 메인(자막) 창의 자막 + 화면(판서)을 근거로 한국어 답변.
 // 자막/화면 수집은 메인 프로세스가 자막 창에서 가져오고, 여기선 질문만 보냅니다.
-const CONFIG = window.CONFIG;
-const ASSIST_MODEL = CONFIG.claudeModel || undefined;
-
 const chatLog = document.getElementById("chatLog");
 const chatInput = document.getElementById("chatInput");
 const chatSend = document.getElementById("chatSend");
@@ -28,7 +25,7 @@ async function send() {
   statusEl.textContent = "답변 생성 중…";
   try {
     // 대화 기록은 메인 프로세스가 보관하므로 질문만 보냄
-    const r = await window.api.ask({ question: q, model: ASSIST_MODEL });
+    const r = await window.api.ask({ question: q });
     pendingEl.classList.remove("pending");
     pendingEl.textContent = r.ok ? r.text : "답변 실패: " + r.error;
   } catch (e) {

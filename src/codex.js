@@ -61,29 +61,7 @@ function isAvailable() {
   });
 }
 
-const FRAMES_DIR = path.join(os.tmpdir(), "assiedu-frames");
 let seq = 0;
-function writeFrames(frames) {
-  if (!frames || !frames.length) return [];
-  fs.mkdirSync(FRAMES_DIR, { recursive: true });
-  return frames
-    .map((d, i) => {
-      const m = /^data:(image\/\w+);base64,(.+)$/s.exec(d || "");
-      if (!m) return null;
-      const ext = m[1] === "image/jpeg" ? "jpg" : m[1].split("/")[1];
-      const f = path.join(FRAMES_DIR, `cx-${seq++}-${i}.${ext}`);
-      fs.writeFileSync(f, Buffer.from(m[2], "base64"));
-      return f;
-    })
-    .filter(Boolean);
-}
-function cleanup(paths) {
-  for (const p of paths || []) {
-    try {
-      fs.unlinkSync(p);
-    } catch (_) {}
-  }
-}
 
 function spawnCodex(prompt, { model, imagePaths, timeout = 120000 }) {
   return new Promise((resolve, reject) => {
