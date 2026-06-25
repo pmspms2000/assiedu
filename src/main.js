@@ -9,6 +9,8 @@ const {
   systemPreferences,
   desktopCapturer,
   shell,
+  dialog,
+  clipboard,
 } = require("electron");
 const settings = require("./settings");
 const ai = require("./ai");
@@ -182,8 +184,14 @@ ipcMain.handle("explain", async (_e, { text, context, frames }) => {
   }
 });
 
-// 별도 질문 창 열기
-ipcMain.handle("open-chat", () => createChatWindow());
+// 별도 질문 창 토글 — 누르면 열리고, 떠 있으면 닫힘 (대화 기록은 메인에 유지됨)
+ipcMain.handle("open-chat", () => {
+  if (chatWin && !chatWin.isDestroyed()) {
+    chatWin.close();
+    return;
+  }
+  createChatWindow();
+});
 
 // 질문 창이 다시 열릴 때 이전 대화를 복원할 수 있게 기록 제공
 ipcMain.handle("get-chat-history", () => chatMessages);
@@ -210,6 +218,35 @@ ipcMain.handle("ask", async (_e, { question }) => {
     chatMessages.push({ role: "user", text: question });
     chatMessages.push({ role: "bot", text: out });
     return { ok: true, text: out };
+  } catch (err) {
+    return { ok: false, error: String(err.message || err) };
+  }
+});
+
+// 전체 번역/받아쓰기 내보내기 — 클립보드 복사 (웹 AI에 바로 붙여넣기용)
+ipcMain.handle("copy-text", (_e, text) => {
+  clipboard.writeText(String(text || ""));
+  return { ok: true };
+});
+
+// 전체 내보내기 — 사용자가 원하는 위치에 파일로 저장
+ipcMain.handle("save-export", async (e, { text, defaultName }) => {
+  try {
+    const w = BrowserWindow.fromWebContents(e.sender);
+    const { canceled, filePath } = await dialog.showSaveDialog(w, {
+      title: "강의 기록 저장",
+      defaultPath: path.join(
+        app.getPath("documents"),
+        defaultName || "강의기록.md"
+      ),
+      filters: [
+        { name: "Markdown", extensions: ["md"] },
+        { name: "텍스트", extensions: ["txt"] },
+      ],
+    });
+    if (canceled || !filePath) return { ok: false, canceled: true };
+    fs.writeFileSync(filePath, String(text || ""), "utf8");
+    return { ok: true, file: filePath };
   } catch (err) {
     return { ok: false, error: String(err.message || err) };
   }

@@ -22,6 +22,11 @@ const visionBtn = document.getElementById("visionBtn");
 const chatBtn = document.getElementById("chatBtn");
 const opacity = document.getElementById("opacity");
 const opacityVal = document.getElementById("opacityVal");
+const exportBtn = document.getElementById("exportBtn");
+const exportMenu = document.getElementById("exportMenu");
+const exportCopy = document.getElementById("exportCopy");
+const exportSave = document.getElementById("exportSave");
+const exportPrompt = document.getElementById("exportPrompt");
 
 // 현재 AI 제공자 상태(설정에서 옴): "free" | "anthropic" | "openai" | "cli"
 const state = { provider: "free" };
@@ -274,6 +279,88 @@ async function showSummary() {
     : "요약 실패: " + res.error;
 }
 
+// --- 전체 내보내기 (무료 모드 사용자가 웹 AI에 통째로 붙여넣기 좋게) ---
+const pad2 = (n) => String(n).padStart(2, "0");
+function nowStamp() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(
+    d.getDate()
+  )} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+function exportFileName() {
+  const d = new Date();
+  return `강의기록-${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(
+    d.getDate()
+  )}-${pad2(d.getHours())}${pad2(d.getMinutes())}.md`;
+}
+
+// 화면의 자막을 마크다운으로 직조 (렌더된 번역/설명을 그대로 사용)
+function buildExport(withPrompt) {
+  const segs = [...captionsEl.querySelectorAll(".segment")];
+  if (segs.length === 0) return null;
+  const ko = activeLectureLang === "ko";
+  const lines = [
+    "# AssiEdu 강의 기록",
+    `날짜: ${nowStamp()}`,
+    `강의: ${ko ? "한국어(받아쓰기)" : "영어 → 한국어 번역"}`,
+    "",
+    "## 강의 내용",
+    "",
+  ];
+  segs.forEach((s, i) => {
+    const en = s.querySelector(".en");
+    const koEl = s.querySelector(".ko");
+    const exp = s.querySelector(".explanation");
+    if (ko) {
+      lines.push(`${i + 1}. ${koEl ? koEl.textContent.trim() : ""}`);
+    } else {
+      lines.push(`${i + 1}. ${en ? en.textContent.trim() : ""}`);
+      const t = koEl ? koEl.textContent.trim() : "";
+      if (t && t !== "번역 중…") lines.push(`   → ${t}`);
+    }
+    if (exp && !exp.classList.contains("hidden") && exp.textContent.trim())
+      lines.push(`   💡 ${exp.textContent.trim()}`);
+  });
+  if (withPrompt) {
+    lines.push(
+      "",
+      "---",
+      "",
+      "위 강의 내용을 바탕으로 한국어로 정리해줘:",
+      "1. 핵심 내용 요약 (불릿으로)",
+      "2. 어려운 용어·개념 쉬운 설명",
+      "3. 시험에 나올 만한 포인트"
+    );
+  }
+  return lines.join("\n");
+}
+
+async function doExportCopy() {
+  const text = buildExport(exportPrompt.checked);
+  exportMenu.classList.add("hidden");
+  if (!text) {
+    setStatus("내보낼 자막이 없어요");
+    return;
+  }
+  await window.api.copyText(text);
+  setStatus("📋 전체 복사됨 — 웹 AI 창에 붙여넣기 하세요");
+}
+
+async function doExportSave() {
+  const text = buildExport(exportPrompt.checked);
+  exportMenu.classList.add("hidden");
+  if (!text) {
+    setStatus("내보낼 자막이 없어요");
+    return;
+  }
+  const r = await window.api.saveExport({
+    text,
+    defaultName: exportFileName(),
+  });
+  if (r.ok) setStatus("💾 저장됨: " + r.file);
+  else if (!r.canceled) setStatus("저장 실패: " + (r.error || ""));
+}
+
 // --- 화면 보기(영상/판서) ---
 async function toggleVision() {
   if (vision.active) {
@@ -304,6 +391,14 @@ refreshBtn.onclick = refreshDevices;
 visionBtn.onclick = toggleVision;
 chatBtn.onclick = () => window.api.openChat(); // 질문은 별도 창에서
 settingsBtn.onclick = () => window.api.openSettings();
+exportBtn.onclick = (e) => {
+  e.stopPropagation();
+  exportMenu.classList.toggle("hidden");
+};
+exportMenu.addEventListener("click", (e) => e.stopPropagation()); // 메뉴 내부 클릭은 닫지 않음
+document.addEventListener("click", () => exportMenu.classList.add("hidden"));
+exportCopy.onclick = doExportCopy;
+exportSave.onclick = doExportSave;
 opacity.addEventListener("input", () => {
   const pct = Number(opacity.value);
   opacityVal.textContent = pct + "%";

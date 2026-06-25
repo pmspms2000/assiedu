@@ -12,6 +12,17 @@
       <button id="visionBtn" title="강의 화면(슬라이드/판서)을 AI가 보게 합니다">🖥️ 화면 보기</button>
       <button id="chatBtn" title="강의 내용·화면·판서에 대해 질문하기">💬 질문</button>
       <button id="summaryBtn">📝 요약</button>
+      <span id="exportWrap">
+        <button id="exportBtn" title="번역/받아쓰기 전체를 복사하거나 파일로 저장">📤 내보내기</button>
+        <div id="exportMenu" class="hidden">
+          <button id="exportCopy">📋 전체 복사</button>
+          <button id="exportSave">💾 파일로 저장…</button>
+          <label class="export-opt">
+            <input type="checkbox" id="exportPrompt" checked />
+            요약 요청 프롬프트 포함
+          </label>
+        </div>
+      </span>
       <button id="settingsBtn" title="AI 제공자·API 키 설정">⚙️</button>
       <span id="modeBadge" class="badge"></span>
       <span id="status" class="status">대기 중</span>

@@ -53,6 +53,44 @@ button.active {
   font-size: 12px;
   color: #98989d;
 }
+/* 내보내기 드롭다운 */
+#exportWrap {
+  position: relative;
+  display: inline-flex;
+}
+#exportMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 6px;
+  z-index: 50;
+  background: #2c2c2e;
+  border: 1px solid #3a3a3c;
+  border-radius: 10px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 180px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+/* ID 선택자가 .hidden(display:none)을 이기지 않도록 — 숨김이 우선 */
+#exportMenu.hidden {
+  display: none;
+}
+#exportMenu button {
+  text-align: left;
+  width: 100%;
+}
+.export-opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  font-size: 12px;
+  color: #98989d;
+  cursor: pointer;
+}
 .devicebar {
   display: flex;
   align-items: center;

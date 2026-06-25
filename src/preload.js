@@ -23,4 +23,7 @@ contextBridge.exposeInMainWorld("api", {
   openChat: () => ipcRenderer.invoke("open-chat"),
   // 질문 창 재오픈 시 이전 대화 복원
   getChatHistory: () => ipcRenderer.invoke("get-chat-history"),
+  // 전체 내보내기: 클립보드 복사 / 위치 선택 후 파일 저장
+  copyText: (text) => ipcRenderer.invoke("copy-text", text),
+  saveExport: (payload) => ipcRenderer.invoke("save-export", payload),
 });

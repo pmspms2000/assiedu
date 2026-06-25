@@ -1,6 +1,6 @@
 {
   "name": "assiedu",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "교환학생 영어 수업용 실시간 번역·설명 데스크톱 AI",
   "main": "src/main.js",
   "scripts": {
