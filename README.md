@@ -18,7 +18,7 @@
 **[👉 최신 버전 받기 (Releases)](https://github.com/pmspms2000/assiedu/releases/latest)**
 
 - 🍎 맥 (Apple Silicon): [`AssiEdu-0.2.0-arm64.dmg`](https://github.com/pmspms2000/assiedu/releases/download/v0.2.0/AssiEdu-0.2.0-arm64.dmg)
-- 🪟 윈도우: [`AssiEdu-Setup-0.2.0.exe`](https://github.com/pmspms2000/assiedu/releases/download/v0.2.0/AssiEdu-Setup-0.2.0.exe)
+- 🪟 윈도우: [`AssiEdu.Setup.0.2.0.exe`](https://github.com/pmspms2000/assiedu/releases/download/v0.2.0/AssiEdu.Setup.0.2.0.exe)
 
 설치 방법은 아래 [설치](#설치) 참고. (서명되지 않은 앱이라 첫 실행 시 보안 경고는 한 번 우회해야 해요.)
 
