@@ -1,6 +1,6 @@
 // 렌더러: 설정(제공자)에 따라 엔진을 골라 연결하고 UI를 그립니다.
 import { createWhisperSTT } from "./engines/stt-whisper.js";
-import { freeTranslate, providerTranslate } from "./engines/translate.js";
+import { freeTranslate, providerTranslateBatch } from "./engines/translate.js";
 import { createScreenVision } from "./engines/vision-capture.js";
 
 const CONFIG = window.CONFIG;
@@ -27,6 +27,7 @@ const exportMenu = document.getElementById("exportMenu");
 const exportCopy = document.getElementById("exportCopy");
 const exportSave = document.getElementById("exportSave");
 const exportPrompt = document.getElementById("exportPrompt");
+const lectureBtn = document.getElementById("lectureBtn");
 
 // 현재 AI 제공자 상태(설정에서 옴): "free" | "anthropic" | "openai" | "cli"
 const state = { provider: "free" };
@@ -88,15 +89,70 @@ window.__assieduContext = () => ({
 });
 const fullTranscript = []; // 요약용 원문 누적
 
-// 제공자에 맞춰 번역: 무료면 MyMemory, 아니면 선택한 AI
-async function translate(text) {
-  if (!aiOn())
-    return freeTranslate(text, {
-      sourceLang: CONFIG.sourceLang,
-      targetLang: CONFIG.targetLang,
-      email: CONFIG.myMemoryEmail,
+// 무료 모드 번역: 문장마다 MyMemory (AI 모드는 아래 묶음 번역 큐 사용)
+function translateFreeSeg(text) {
+  return freeTranslate(text, {
+    sourceLang: CONFIG.sourceLang,
+    targetLang: CONFIG.targetLang,
+    email: CONFIG.myMemoryEmail,
+  });
+}
+
+// --- AI 번역 묶음 큐 ---
+// Claude CLI는 호출 1회당 약 3초 고정비용 → 문장마다 부르면 강의를 못 따라감.
+// 영어 자막은 즉시 띄우고, N문장 모이거나 일정 시간이 지나면 한 번에 번역.
+const tq = { items: [], timer: null, running: false, drain: false };
+
+function enqueueTranslate(seg, text) {
+  tq.items.push({ seg, text });
+  const size = CONFIG.translateBatchSize || 4;
+  if (tq.items.length >= size) flushTranslateBatch();
+  else if (!tq.timer)
+    tq.timer = setTimeout(flushTranslateBatch, CONFIG.translateBatchWaitMs || 15000);
+}
+
+// force=true(정지 시): 남은 문장을 전부 이어서 번역
+async function flushTranslateBatch(force) {
+  clearTimeout(tq.timer);
+  tq.timer = null;
+  if (force === true) tq.drain = true;
+  if (tq.items.length === 0) {
+    tq.drain = false;
+    return;
+  }
+  if (tq.running) return; // 진행 중이면 끝난 뒤 finally에서 이어서 처리
+  const batch = tq.items.splice(0, 8); // 한 번에 최대 8문장
+  tq.running = true;
+  const koOf = (b) => b.seg.querySelector(".ko");
+  batch.forEach((b) => {
+    const k = koOf(b);
+    if (k) k.textContent = "번역 중…";
+  });
+  try {
+    const kos = await providerTranslateBatch(batch.map((b) => b.text));
+    batch.forEach((b, i) => {
+      const k = koOf(b);
+      if (!k) return;
+      k.textContent = kos[i] || "(번역 없음)";
+      k.classList.remove("pending");
     });
-  return providerTranslate(text);
+  } catch (e) {
+    batch.forEach((b) => {
+      const k = koOf(b);
+      if (!k) return;
+      k.textContent = "번역 실패: " + (e.message || e);
+      k.classList.remove("pending");
+    });
+  } finally {
+    tq.running = false;
+    captionsEl.scrollTop = captionsEl.scrollHeight;
+    // 번역하는 동안 쌓인 문장: 정지 중이거나 충분히 모였으면 바로, 아니면 타이머로
+    const size = CONFIG.translateBatchSize || 4;
+    if (tq.items.length === 0) tq.drain = false;
+    else if (tq.drain || tq.items.length >= size) flushTranslateBatch();
+    else if (!tq.timer)
+      tq.timer = setTimeout(flushTranslateBatch, CONFIG.translateBatchWaitMs || 15000);
+  }
 }
 
 function setStatus(t) {
@@ -188,6 +244,7 @@ function stop() {
   toggleBtn.textContent = "▶ 시작";
   toggleBtn.classList.remove("running");
   if (stt) stt.stop();
+  flushTranslateBatch(true); // 아직 번역 안 된 문장은 지금 바로
   interimEl.textContent = "";
   setStatus("정지됨");
 }
@@ -225,17 +282,23 @@ async function addSegment(text) {
   captionsEl.appendChild(seg);
   captionsEl.scrollTop = captionsEl.scrollHeight;
 
+  seg.querySelector(".explain-btn").onclick = () => explainSegment(seg, text);
+
   const koEl = seg.querySelector(".ko");
+  if (aiOn()) {
+    // AI 모드: 영어는 이미 떴고, 번역은 모아서 한 번에
+    koEl.textContent = "번역 대기 중…";
+    enqueueTranslate(seg, text);
+    return;
+  }
+  // 무료 모드: 문장마다 MyMemory
   try {
-    const ko = await translate(text);
-    koEl.textContent = ko;
+    koEl.textContent = await translateFreeSeg(text);
   } catch (e) {
     koEl.textContent = "번역 실패: " + (e.message || e);
   }
   koEl.classList.remove("pending");
   captionsEl.scrollTop = captionsEl.scrollHeight;
-
-  seg.querySelector(".explain-btn").onclick = () => explainSegment(seg, text);
 }
 
 async function explainSegment(seg, enText) {
@@ -316,7 +379,7 @@ function buildExport(withPrompt) {
     } else {
       lines.push(`${i + 1}. ${en ? en.textContent.trim() : ""}`);
       const t = koEl ? koEl.textContent.trim() : "";
-      if (t && t !== "번역 중…") lines.push(`   → ${t}`);
+      if (t && !koEl.classList.contains("pending")) lines.push(`   → ${t}`);
     }
     if (exp && !exp.classList.contains("hidden") && exp.textContent.trim())
       lines.push(`   💡 ${exp.textContent.trim()}`);
@@ -361,6 +424,49 @@ async function doExportSave() {
   else if (!r.canceled) setStatus("저장 실패: " + (r.error || ""));
 }
 
+// --- 강의안 PDF (번역·설명·질문·요약의 참고자료) ---
+function applyLecture(info) {
+  if (info && info.loaded) {
+    const short = info.name.length > 14 ? info.name.slice(0, 12) + "…" : info.name;
+    lectureBtn.textContent = "📎 " + short;
+    lectureBtn.classList.add("active");
+    lectureBtn.title =
+      "강의안: " + info.name + " (" + info.pages + "쪽)" +
+      (info.hasGlossary
+        ? " · 용어집 준비됨"
+        : aiOn()
+          ? " · 용어집 생성 중…"
+          : " · 텍스트만(무료 모드)") +
+      "\n다시 누르면 해제";
+  } else {
+    lectureBtn.textContent = "📎 강의안";
+    lectureBtn.classList.remove("active");
+    lectureBtn.title = "강의안 PDF를 넣으면 번역·설명·질문·요약에 참고합니다";
+  }
+}
+
+async function toggleLecture() {
+  const cur = await window.api.getLectureInfo();
+  if (cur && cur.loaded) {
+    await window.api.clearLecturePdf();
+    setStatus("강의안 해제됨");
+    return;
+  }
+  const r = await window.api.loadLecturePdf();
+  if (r.ok)
+    setStatus(
+      "강의안 로드됨: " + r.name + " (" + r.pages + "쪽)" +
+        (aiOn() ? " — 용어집 생성 중…" : "")
+    );
+  else if (!r.canceled) setStatus("강의안 로드 실패: " + r.error);
+}
+
+window.api.onLectureChanged((info) => {
+  applyLecture(info);
+  if (info && info.loaded && info.hasGlossary)
+    setStatus("강의안 용어집 준비됨 — 번역·설명에 참고해요");
+});
+
 // --- 화면 보기(영상/판서) ---
 async function toggleVision() {
   if (vision.active) {
@@ -391,6 +497,7 @@ refreshBtn.onclick = refreshDevices;
 visionBtn.onclick = toggleVision;
 chatBtn.onclick = () => window.api.openChat(); // 질문은 별도 창에서
 settingsBtn.onclick = () => window.api.openSettings();
+lectureBtn.onclick = toggleLecture;
 exportBtn.onclick = (e) => {
   e.stopPropagation();
   exportMenu.classList.toggle("hidden");
@@ -408,4 +515,5 @@ navigator.mediaDevices.addEventListener("devicechange", refreshDevices);
 
 setStatus("대기 중");
 loadProvider(); // 제공자 상태 읽어 버튼/뱃지 반영
+window.api.getLectureInfo().then(applyLecture); // 강의안 로드 여부 버튼에 반영
 refreshDevices();

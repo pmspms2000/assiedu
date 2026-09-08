@@ -29,11 +29,18 @@ function encrypt(s) {
 
 function load() {
   if (cache) return cache;
-  cache = { provider: "free", model: "", anthropicKey: "", openaiKey: "" };
+  cache = {
+    provider: "free",
+    model: "",
+    anthropicKey: "",
+    openaiKey: "",
+    lastExportDir: "", // 내보내기 파일을 마지막으로 저장한 폴더
+  };
   try {
     const raw = JSON.parse(fs.readFileSync(file(), "utf8"));
     cache.provider = raw.provider || "free";
     cache.model = raw.model || "";
+    cache.lastExportDir = raw.lastExportDir || "";
     cache.anthropicKey = decrypt(raw.anthropicKeyEnc);
     cache.openaiKey = decrypt(raw.openaiKeyEnc);
   } catch (_) {}
@@ -47,6 +54,7 @@ function save(patch) {
   const out = {
     provider: next.provider || "free",
     model: next.model || "",
+    lastExportDir: next.lastExportDir || "",
     anthropicKeyEnc: encrypt(next.anthropicKey),
     openaiKeyEnc: encrypt(next.openaiKey),
   };

@@ -90,10 +90,41 @@ const PROMPTS = {
   askSystem:
     "당신은 교환학생의 강의 학습을 돕는 한국어 AI 조교입니다. 강의 자막 + 화면(판서) 이미지 + 이전 대화를 " +
     "근거로 학생의 질문에 한국어로 친절하고 정확하게 답하세요. 자료에 없는 내용은 지어내지 말고 모른다고 하세요.",
+  translateBatchSystem:
+    "You translate live English university-lecture speech into natural, fluent Korean. " +
+    "You receive several numbered English segments in order; translate EACH one, using neighboring segments for context. " +
+    "Output EXACTLY one line per segment, in the same order, formatted as `N. <Korean>` and nothing else — no preamble, no notes. " +
+    "Keep technical terms accurate; proper nouns or standard jargon may keep English in parentheses. " +
+    "If a lecture glossary is provided, follow its term translations consistently.",
+  glossarySystem:
+    "당신은 강의 통역을 준비하는 조교입니다. 아래 강의안 텍스트에서 " +
+    "(1) 핵심 전문 용어 20~40개를 '영어 = 한국어' 한 줄씩, (2) 강의 주제·흐름을 3~5문장으로 정리하세요. " +
+    "실시간 번역 때 참고할 압축 자료이므로 간결하게, 머리말 없이 출력하세요.",
   summarizeSystem:
     "당신은 교환학생의 학습을 돕는 조교입니다. 아래 강의 음성 기록으로 한국어 복습 노트를 마크다운으로 작성하세요. " +
     "형식:\n1) 한 줄 요약\n2) 핵심 주제별 정리(불릿)\n3) 꼭 알아야 할 용어/개념 정의\n4) 강조점 / 시험에 나올 만한 부분",
 };
+
+// 강의안(용어집/본문 일부)이 있으면 프롬프트 앞에 참고자료로 붙임
+function withRef(user, reference) {
+  return reference ? "[강의안 참고]\n" + reference + "\n\n" + user : user;
+}
+
+// "N. 번역" 형식 출력을 순서대로 배열에 담음. 번호 파싱이 전부 실패하면 줄 순서로 채움
+function parseNumbered(out, n) {
+  const res = new Array(n).fill("");
+  for (const line of String(out).split("\n")) {
+    const m = /^\s*(\d+)[.)]\s*(.+)$/.exec(line);
+    if (!m) continue;
+    const i = Number(m[1]) - 1;
+    if (i >= 0 && i < n) res[i] = (res[i] ? res[i] + " " : "") + m[2].trim();
+  }
+  if (res.every((x) => !x)) {
+    const lines = String(out).split("\n").map((s) => s.trim()).filter(Boolean);
+    for (let i = 0; i < n; i++) res[i] = lines[i] || "";
+  }
+  return res;
+}
 
 function explainUser(text, context) {
   return (context ? `[최근 강의 자막]\n${context}\n\n` : "") + `[설명이 필요한 부분]\n${text}`;
@@ -143,11 +174,39 @@ function translate({ text }) {
   });
 }
 
-function explain({ text, context, frames }) {
+// 여러 문장을 한 호출로 번역 — CLI 턴당 고정비용을 문장 수로 나눠 줄임
+async function translateBatch({ texts, reference }) {
+  const numbered = texts.map((t, i) => i + 1 + ". " + t).join("\n");
+  const user =
+    (reference ? "[강의안 용어집/개요]\n" + reference + "\n\n" : "") +
+    "[Segments]\n" + numbered;
+  const out = await dispatch({
+    system: PROMPTS.translateBatchSystem,
+    user,
+    maxTokens: 2048,
+    anthModel: ANTH_TRANSLATE,
+    oaiModel: OAI_TRANSLATE,
+  });
+  return parseNumbered(out, texts.length);
+}
+
+// 강의안 텍스트 → 번역 참고용 압축 용어집/개요 (강의안 로드 시 1회)
+function buildGlossary({ text }) {
+  const model = settings.load().model || undefined;
+  return dispatch({
+    system: PROMPTS.glossarySystem,
+    user: "[강의안]\n" + String(text).slice(0, 60000),
+    maxTokens: 2048,
+    anthModel: model || ANTH_SMART,
+    oaiModel: model || OAI_SMART,
+  });
+}
+
+function explain({ text, context, frames, reference }) {
   const model = settings.load().model || undefined;
   return dispatch({
     system: PROMPTS.explainSystem,
-    user: explainUser(text, context),
+    user: withRef(explainUser(text, context), reference),
     frames,
     maxTokens: 1024,
     anthModel: model || ANTH_SMART,
@@ -155,11 +214,11 @@ function explain({ text, context, frames }) {
   });
 }
 
-function ask({ question, transcript, history, frames }) {
+function ask({ question, transcript, history, frames, reference }) {
   const model = settings.load().model || undefined;
   return dispatch({
     system: PROMPTS.askSystem,
-    user: askUser(question, transcript, history),
+    user: withRef(askUser(question, transcript, history), reference),
     frames,
     maxTokens: 2048,
     anthModel: model || ANTH_SMART,
@@ -167,11 +226,11 @@ function ask({ question, transcript, history, frames }) {
   });
 }
 
-function summarize({ transcript }) {
+function summarize({ transcript, reference }) {
   const model = settings.load().model || undefined;
   return dispatch({
     system: PROMPTS.summarizeSystem,
-    user: "[강의 기록]\n" + transcript,
+    user: withRef("[강의 기록]\n" + transcript, reference),
     maxTokens: 8000,
     anthModel: model || ANTH_SMART,
     oaiModel: model || OAI_SMART,
@@ -193,4 +252,14 @@ function codexAvailable() {
   }
 }
 
-module.exports = { translate, explain, ask, summarize, provider, cliAvailable, codexAvailable };
+module.exports = {
+  translate,
+  translateBatch,
+  buildGlossary,
+  explain,
+  ask,
+  summarize,
+  provider,
+  cliAvailable,
+  codexAvailable,
+};

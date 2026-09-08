@@ -6,3 +6,7 @@ dist-app/
 .DS_Store
 transcripts/
 .claude/settings.local.json
+
+# 개인 강의 번역본/노트 (교수님 강의 내용 — 공개 저장소에 올리지 않음)
+컴퓨터네트웍개론/
+강의기록-*.md

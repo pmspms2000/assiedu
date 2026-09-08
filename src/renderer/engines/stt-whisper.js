@@ -12,10 +12,10 @@ env.allowLocalModels = false;
 const SR = 16000; // Whisper 입력 샘플레이트
 const FRAME = 4096; // ScriptProcessor 프레임 크기 (~256ms)
 const SILENCE_RMS = 0.01; // 이 값 이하이면 '무음'으로 간주
-const SILENCE_HANG_MS = 800; // 말이 이만큼 멈추면 (그리고 충분히 모였으면) 한 블록 확정
+const SILENCE_HANG_MS = 700; // 말이 이만큼 멈추면 (그리고 충분히 모였으면) 한 블록 확정
 const MIN_SPEECH_SAMPLES = SR * 0.8; // 최소 0.8초 이상 말해야 처리
-const MIN_BLOCK_SAMPLES = SR * 5; // 침묵으로 끊으려면 최소 5초는 모여야 함(여러 문장 묶기)
-const MAX_CHUNK_SAMPLES = SR * 18; // 18초 넘으면 강제로 끊음
+const MIN_BLOCK_SAMPLES = SR * 2.5; // 침묵으로 끊으려면 최소 2.5초는 모여야 함 (자막을 빨리 띄우려고 짧게)
+const MAX_CHUNK_SAMPLES = SR * 10; // 10초 넘으면 강제로 끊음
 
 export function createWhisperSTT({ model, lang, source, onFinal, onStatus, onListening }) {
   let transcriber = null;
@@ -68,7 +68,13 @@ export function createWhisperSTT({ model, lang, source, onFinal, onStatus, onLis
       const junkKo =
         /^(시청해\s*주셔서\s*감사합니다\.?|구독과?\s*좋아요\s*부탁드립니다\.?|다음\s*영상에서\s*(봐요|만나요|뵙겠습니다)\.?|\.)$/;
       const junk = lang === "ko" ? junkKo : junkEn;
-      if (text && !junk.test(text)) onFinal(text);
+      // 무음/잡음 태그([BLANK_AUDIO], [ Silence ], [Music]…)는 지우고, 지우고 나면 아무것도 없거나
+      // (inaudible)뿐이거나 추임새("Um.", "So.", "and")만 남는 토막은 자막으로 올리지 않음
+      const clean = text.replace(/\[[^\]]*\]/g, "").replace(/\s{2,}/g, " ").trim();
+      const bare = clean.replace(/\([^)]*\)/g, "").trim();
+      const junkFiller = /^(um+|uh+|hmm+|mm+|so|and|well|like|you know)[\s.,!?…]*$/i;
+      const isJunk = !bare || junk.test(clean) || junkFiller.test(bare);
+      if (!isJunk) onFinal(clean);
     } catch (e) {
       onStatus && onStatus("인식 오류: " + (e.message || e));
     } finally {

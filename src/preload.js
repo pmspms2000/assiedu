@@ -26,4 +26,12 @@ contextBridge.exposeInMainWorld("api", {
   // 전체 내보내기: 클립보드 복사 / 위치 선택 후 파일 저장
   copyText: (text) => ipcRenderer.invoke("copy-text", text),
   saveExport: (payload) => ipcRenderer.invoke("save-export", payload),
+  // 여러 문장 묶음 번역: { texts:[...] } → { ok, texts:[...] }
+  translateBatch: (payload) => ipcRenderer.invoke("translate-batch", payload),
+  // 강의안 PDF: 파일 선택 → 텍스트 추출 → (AI 있으면) 용어집 생성. 번역·설명·질문·요약에 참고
+  loadLecturePdf: () => ipcRenderer.invoke("load-lecture-pdf"),
+  clearLecturePdf: () => ipcRenderer.invoke("clear-lecture-pdf"),
+  getLectureInfo: () => ipcRenderer.invoke("get-lecture-info"),
+  onLectureChanged: (cb) =>
+    ipcRenderer.on("lecture-changed", (_e, info) => cb(info)),
 });

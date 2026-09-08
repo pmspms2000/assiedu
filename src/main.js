@@ -17,6 +17,35 @@ const ai = require("./ai");
 
 let win = null;
 
+// 강의안(PDF) — 번역·설명·질문·요약의 참고자료. 앱 종료 시까지 메모리에 보관
+let lecture = null; // { name, pages, text, glossary }
+function lectureInfo() {
+  return lecture
+    ? {
+        loaded: true,
+        name: lecture.name,
+        pages: lecture.pages,
+        chars: lecture.text.length,
+        hasGlossary: !!lecture.glossary,
+      }
+    : { loaded: false };
+}
+function broadcastLecture() {
+  const info = lectureInfo();
+  for (const w of BrowserWindow.getAllWindows()) {
+    if (!w.isDestroyed()) w.webContents.send("lecture-changed", info);
+  }
+}
+// 번역용: 압축 용어집만(짧아서 지연 없음) / 질문·요약용: 용어집 + 본문 일부
+function lectureRefShort() {
+  return lecture ? lecture.glossary || "" : "";
+}
+function lectureRefLong() {
+  if (!lecture) return "";
+  const head = lecture.glossary ? lecture.glossary + "\n\n" : "";
+  return head + "[강의안 본문(일부)]\n" + lecture.text.slice(0, 20000);
+}
+
 // 설정 변경을 모든 창에 알림 → 렌더러가 제공자별 UI를 갱신
 function broadcastSettings() {
   const view = settings.publicView();
@@ -178,7 +207,10 @@ ipcMain.handle("translate", async (_e, { text }) => {
 // 용어/개념 설명 — 현재 화면 이미지(슬라이드/판서)도 함께 참고
 ipcMain.handle("explain", async (_e, { text, context, frames }) => {
   try {
-    return { ok: true, text: await ai.explain({ text, context, frames }) };
+    return {
+      ok: true,
+      text: await ai.explain({ text, context, frames, reference: lectureRefShort() }),
+    };
   } catch (err) {
     return { ok: false, error: String(err.message || err) };
   }
@@ -213,11 +245,71 @@ ipcMain.handle("ask", async (_e, { question }) => {
   } catch (_) {}
   const history = chatMessages.slice(-6); // 현재 질문 직전까지의 대화
   try {
-    const out = await ai.ask({ question, transcript, history, frames });
+    const out = await ai.ask({
+      question,
+      transcript,
+      history,
+      frames,
+      reference: lectureRefLong(),
+    });
     // 성공한 대화만 기록에 추가(껐다 켜도 유지)
     chatMessages.push({ role: "user", text: question });
     chatMessages.push({ role: "bot", text: out });
     return { ok: true, text: out };
+  } catch (err) {
+    return { ok: false, error: String(err.message || err) };
+  }
+});
+
+// 묶음 번역 — 영어 자막은 렌더러가 즉시 띄우고, 여러 문장을 모아 한 번에 번역(강의안 용어집 참고)
+ipcMain.handle("translate-batch", async (_e, { texts }) => {
+  try {
+    const out = await ai.translateBatch({
+      texts: texts || [],
+      reference: lectureRefShort(),
+    });
+    return { ok: true, texts: out };
+  } catch (err) {
+    return { ok: false, error: String(err.message || err) };
+  }
+});
+
+// --- 강의안 PDF ---
+ipcMain.handle("get-lecture-info", () => lectureInfo());
+ipcMain.handle("clear-lecture-pdf", () => {
+  lecture = null;
+  broadcastLecture();
+  return lectureInfo();
+});
+ipcMain.handle("load-lecture-pdf", async (e) => {
+  const w = BrowserWindow.fromWebContents(e.sender);
+  const { canceled, filePaths } = await dialog.showOpenDialog(w, {
+    title: "강의안 PDF 선택",
+    properties: ["openFile"],
+    filters: [{ name: "PDF", extensions: ["pdf"] }],
+  });
+  if (canceled || !filePaths || !filePaths[0]) return { ok: false, canceled: true };
+  const file = filePaths[0];
+  try {
+    const pdfParse = require("pdf-parse");
+    const data = await pdfParse(fs.readFileSync(file));
+    const text = String(data.text || "").replace(/[ \t]+\n/g, "\n").trim();
+    if (!text) throw new Error("PDF에서 텍스트를 찾지 못했어요 (스캔 이미지 PDF일 수 있음)");
+    lecture = { name: path.basename(file), pages: data.numpages || 0, text, glossary: "" };
+    broadcastLecture();
+    // 용어집은 AI가 있을 때만, 응답을 기다리지 않고 뒤에서 생성 → 완료되면 알림
+    if (ai.provider() !== "free") {
+      const mine = lecture;
+      ai.buildGlossary({ text })
+        .then((g) => {
+          if (lecture === mine) {
+            lecture.glossary = g || "";
+            broadcastLecture();
+          }
+        })
+        .catch(() => {});
+    }
+    return { ok: true, ...lectureInfo() };
   } catch (err) {
     return { ok: false, error: String(err.message || err) };
   }
@@ -235,8 +327,9 @@ ipcMain.handle("save-export", async (e, { text, defaultName }) => {
     const w = BrowserWindow.fromWebContents(e.sender);
     const { canceled, filePath } = await dialog.showSaveDialog(w, {
       title: "강의 기록 저장",
+      // 마지막으로 저장한 폴더에서 시작 — 강의별 폴더에 모아두기 편하게
       defaultPath: path.join(
-        app.getPath("documents"),
+        settings.load().lastExportDir || app.getPath("documents"),
         defaultName || "강의기록.md"
       ),
       filters: [
@@ -246,6 +339,7 @@ ipcMain.handle("save-export", async (e, { text, defaultName }) => {
     });
     if (canceled || !filePath) return { ok: false, canceled: true };
     fs.writeFileSync(filePath, String(text || ""), "utf8");
+    settings.save({ lastExportDir: path.dirname(filePath) }); // 다음 저장은 이 폴더에서
     return { ok: true, file: filePath };
   } catch (err) {
     return { ok: false, error: String(err.message || err) };
@@ -254,7 +348,7 @@ ipcMain.handle("save-export", async (e, { text, defaultName }) => {
 
 ipcMain.handle("summarize", async (_e, { transcript }) => {
   try {
-    const summary = await ai.summarize({ transcript });
+    const summary = await ai.summarize({ transcript, reference: lectureRefLong() });
     // 요약본을 파일로도 저장
     const dir = path.join(app.getPath("documents"), "AssiEdu");
     fs.mkdirSync(dir, { recursive: true });

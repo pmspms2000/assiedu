@@ -24,6 +24,13 @@ export function freeTranslate(text, cfg) {
   });
 }
 
+// 여러 문장을 한 번에 번역(제공자 경유) — 같은 순서의 한국어 배열 반환
+export async function providerTranslateBatch(texts) {
+  const r = await window.api.translateBatch({ texts });
+  if (!r.ok) throw new Error(r.error);
+  return r.texts;
+}
+
 // 선택한 제공자(Claude/GPT/CLI) 경유 번역 — 메인 프로세스가 라우팅
 export async function providerTranslate(text) {
   const r = await window.api.translate({ text });

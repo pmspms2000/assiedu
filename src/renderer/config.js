@@ -3,22 +3,28 @@
 // └─────────────────────────────────────────────────────────────┘
 window.CONFIG = {
   // 영어 강의용 Whisper 모델 (정확도↑ 위 → 속도↑ 아래):
-  //   "Xenova/whisper-small.en"  ← 정확도 좋음 (기본, M칩 권장)
-  //   "Xenova/whisper-base.en"   ← 중간
-  //   "Xenova/whisper-tiny.en"   ← 가장 빠름 / 저사양
-  whisperModel: "Xenova/whisper-small.en",
+  //   "Xenova/whisper-small.en"  ← 가장 정확. 1배속은 여유(1.6배), 2배속은 한계(0.96배 → 점점 밀림)
+  //   "Xenova/whisper-base.en"   ← 기본. 2배속도 여유(1.4배), 테스트 정확도 동일 — 빠르게 듣는 강의용
+  //   "Xenova/whisper-tiny.en"   ← 가장 빠름 / 저사양. 2배속에서 오인식 시작(3%)
+  // (인식 시간은 오디오 길이가 아니라 단어 수에 비례 → 배속이 오를수록 가벼운 모델이 필요)
+  whisperModel: "Xenova/whisper-base.en",
 
   // 한국어(다국어) 강의용 Whisper 모델 — .en 모델은 한국어를 못 알아들어서
   // 한국어 강의는 다국어 모델을 따로 씁니다. (처음 한 번 다운로드)
   whisperModelKo: "Xenova/whisper-small",
 
   // MyMemory(무료 번역) 한도를 늘리려면(하루 5천→5만 단어) 본인 이메일을 넣으세요.
-  myMemoryEmail: "",
+  myMemoryEmail: "pmspms2000@g.skku.edu",
 
   // 기본 강의 언어 — 앱 안에서 바꿀 수 있어요.
   //   "en" : 영어 강의 → 한국어 번역 자막
   //   "ko" : 한국어 강의 → 그대로 받아쓰기
   lectureLang: "en",
+
+  // AI 번역 묶음 — 영어 자막은 즉시 띄우고, 번역은 아래 둘 중 먼저 오는 조건에서 한 번에 처리
+  // (Claude CLI는 호출 1회당 약 3초 고정 비용이 있어 문장마다 부르면 못 따라감)
+  translateBatchSize: 4, // 문장이 이만큼 모이면 번역
+  translateBatchWaitMs: 15000, // 또는 첫 문장 이후 이만큼(ms) 지나면 번역
 
   // 번역 언어
   sourceLang: "en", // 번역 출발어 (영어)
